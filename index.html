@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WMS Smart Tracker</title>
+    <link rel="shortcut icon" href="WMS.png" type="image/x-icon">   
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #4f46e5; /* Indigo */
+            --inbound: #059669; /* Emerald */
+            --bg: #f1f5f9;
+            --surface: #ffffff;
+            --border: #cbd5e1;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', 'Battambang', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden; 
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--surface);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-top: 6px solid var(--primary);
+            transition: border-color 0.3s;
+        }
+
+        /* --- HEADER & LOGO (UPDATED FOR IMG) --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Styles for the new Image Tag */
+        .wms-logo-img {
+            height: 50px; /* Adjust height as needed for PC */
+            width: auto;  /* Maintains aspect ratio */
+            display: block;
+        }
+
+        #currentDate { font-size: 0.9rem; color: var(--text-sub); font-weight: 600; }
+
+
+        /* --- MODE SWITCHER --- */
+        .mode-switcher {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            background: #e2e8f0;
+            padding: 4px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .mode-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text-sub);
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mode-btn.active { background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .mode-btn.active[data-mode="Outbound"] { color: var(--primary); }
+        .mode-btn.active[data-mode="Inbound"] { color: var(--inbound); }
+
+        /* --- TIMER --- */
+        .timer-section {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap; 
+        }
+
+        .timer-btn {
+            background: var(--primary);
+            color: white;
+            font-size: 1rem;
+            padding: 14px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 180px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .container.inbound-mode .timer-btn { background: var(--inbound); }
+        .timer-btn.running { background-color: var(--danger) !important; animation: pulse 1.5s infinite; }
+        
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+
+        .timer-info { flex-grow: 1; }
+        .clock-display { font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+
+        /* --- INPUTS --- */
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group { display: flex; flex-direction: column; }
+        label { font-size: 0.75rem; font-weight: 700; color: var(--text-sub); margin-bottom: 6px; }
+        
+        input, select {
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem; 
+            background: white;
+        }
+        input:focus, select:focus { outline: 2px solid var(--primary); border-color: transparent; }
+
+        /* Highlight for Ref ID */
+        #refId {
+            background-color: #eff6ff;
+            color: var(--primary);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .container.inbound-mode #refId {
+            background-color: #ecfdf5;
+            color: var(--inbound);
+        }
+
+        /* --- ACTIONS --- */
+        .btn-group { display: flex; gap: 10px; margin-bottom: 25px; }
+        
+        button.action-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        
+        .btn-add { background-color: var(--text-main); color: white; flex-grow: 2; }
+        .container.inbound-mode .btn-add { background-color: var(--inbound); }
+        .container.outbound-mode .btn-add { background-color: var(--primary); }
+        .btn-download { background-color: #334155; color: white; flex-grow: 1; }
+        .btn-clear { background-color: white; color: var(--danger); border: 1px solid #fee2e2; }
+        button.action-btn:active { transform: scale(0.98); }
+
+        /* --- TABLE --- */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            -webkit-overflow-scrolling: touch; 
+        }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        th { background: #f8fafc; color: var(--text-sub); font-weight: 600; white-space: nowrap; }
+
+        /* --- MOBILE RESPONSIVE --- */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .container { padding: 15px; border-radius: 12px; }
+            
+            /* Header adjustments for mobile */
+            header { align-items: center; }
+            .wms-logo-img { height: 40px; } /* Smaller logo on phone */
+            #currentDate { font-size: 0.75rem; }
+
+            .timer-section { padding: 12px; }
+            .timer-btn { width: 100%; height: 50px; font-size: 1.1rem; }
+            .timer-info { width: 100%; display: flex; justify-content: space-between; margin-top: 5px; }
+            .input-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .full-mobile { grid-column: 1 / -1; }
+            .btn-group { flex-direction: column; }
+            .action-btn { width: 100%; height: 48px; }
+        }
+
+        #toast-container { position: fixed; bottom: 20px; left: 20px; right: 20px; z-index: 1000; pointer-events: none; }
+        .toast { 
+            background: white; padding: 15px; border-radius: 8px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15); 
+            display: flex; align-items: center; gap: 12px; 
+            margin-top: 10px; pointer-events: auto;
+            transform: translateY(100px); transition: transform 0.3s;
+            border-left: 5px solid var(--primary);
+        }
+        .toast.show { transform: translateY(0); }
+    </style>
+</head>
+<body>
+
+<div class="container outbound-mode" id="mainContainer">
+    <header>
+        <div class="logo-container">
+            <img src="WMS.png" alt="WMS Logo" class="wms-logo-img"> <h2>WMS Smart Tracker</h2>
+        </div>
+        <div id="currentDate">Loading...</div>
+    </header>
+
+    <div class="mode-switcher">
+        <button class="mode-btn" data-mode="Inbound" onclick="setMode('Inbound')">📥 Inbound</button>
+        <button class="mode-btn active" data-mode="Outbound" onclick="setMode('Outbound')">📤 Outbound</button>
+    </div>
+
+    <div class="timer-section">
+        <button id="timerBtn" class="timer-btn" onclick="toggleTimer()">
+            <span>▶ Start Task</span>
+        </button>
+        <div class="timer-info">
+            <div style="font-size: 0.8rem; color: #64748b; font-weight: 700;">STATUS</div>
+            <div class="clock-display" id="liveClock">00:00:00</div>
+        </div>
+    </div>
+    
+    <div class="input-grid">
+        <div class="form-group full-mobile">
+            <label>Ref ID (SO/ASN)</label>
+            <input type="text" id="refId" placeholder="SO..." onchange="manualIdChange()">
+        </div>
+
+        <div class="form-group">
+            <label>Start</label>
+            <input type="time" id="startTime" readonly>
+        </div>
+        <div class="form-group">
+            <label>End</label>
+            <input type="time" id="endTime" readonly>
+        </div>
+        
+        <div class="form-group">
+            <label>Mins</label>
+            <input type="number" id="duration" readonly style="background-color: #f1f5f9; font-weight: bold;">
+        </div>
+        <div class="form-group">
+            <label>Stage</label>
+            <select id="stage"></select>
+        </div>
+
+        <div class="form-group full-mobile">
+            <label>SKU / Barcode</label>
+            <input type="text" id="sku" placeholder="Scan here...">
+        </div>
+        <div class="form-group">
+            <label>Qty</label>
+            <input type="number" id="qty" placeholder="0" inputmode="numeric">
+        </div>
+        <div class="form-group full-mobile">
+            <label>Problem</label>
+            <input type="text" id="problem" placeholder="Issues?">
+        </div>
+        <div class="form-group full-mobile">
+            <label>Note</label>
+            <input type="text" id="note" placeholder="Additional details...">
+        </div>
+    </div>
+
+    <div class="btn-group">
+        <button class="action-btn btn-add" onclick="addEntry()"><span>+</span> Save Entry</button>
+        <button class="action-btn btn-download" onclick="downloadCSV()"><span>↓</span> CSV</button>
+        <button class="action-btn btn-clear" onclick="clearTable()"><span>🗑</span></button>
+    </div>
+
+    <div class="table-wrapper">
+        <table id="logTable">
+            <thead>
+                <tr>
+                    <th>Ref ID</th>
+                    <th>Time</th>
+                    <th>Min</th>
+                    <th>Stage</th>
+                    <th>SKU</th>
+                    <th>Qty</th>
+                    <th>Problem</th>
+                    <th>Note</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+    /* --- CONFIG --- */
+    let currentMode = 'Outbound';
+    let isManualId = false; 
+
+    const stages = {
+        Inbound: ["Receiving", "Inspect", "Put Away"],
+        Outbound: ["Picking", "Inspect", "Move to Dock", "Hand Over"]
+    };
+
+    /* --- INIT --- */
+    const dateOptions = { weekday: 'short', month: 'short', day: 'numeric' };
+    document.getElementById('currentDate').innerText = new Date().toLocaleDateString('en-US', dateOptions);
+    setInterval(() => document.getElementById('liveClock').innerText = new Date().toLocaleTimeString('en-GB'), 1000);
+    
+    updateStageDropdown();
+    generateAutoID();
+
+    /* --- ID GENERATOR LOGIC --- */
+    function generateAutoID() {
+        if(isManualId) return;
+
+        const now = new Date();
+        const yy = now.getFullYear().toString().slice(-2);
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        
+        const dateCode = `${yy}${mm}${dd}`;
+        const prefix = currentMode === 'Outbound' ? 'SO' : 'ASN';
+        const suffix = '001';
+
+        document.getElementById('refId').value = `${prefix}${dateCode}${suffix}`;
+    }
+
+    function manualIdChange() { isManualId = true; }
+
+    /* --- MODE SWITCHING --- */
+    function setMode(mode) {
+        currentMode = mode;
+        isManualId = false;
+        
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector(`.mode-btn[data-mode="${mode}"]`).classList.add('active');
+        
+        const container = document.getElementById('mainContainer');
+        container.className = `container ${mode.toLowerCase()}-mode`;
+        container.style.borderTopColor = mode === 'Inbound' ? 'var(--inbound)' : 'var(--primary)';
+        
+        updateStageDropdown();
+        generateAutoID();
+    }
+
+    function updateStageDropdown() {
+        const select = document.getElementById('stage');
+        select.innerHTML = "";
+        stages[currentMode].forEach(s => {
+            const opt = document.createElement("option");
+            opt.value = s; opt.text = s; select.appendChild(opt);
+        });
+    }
+
+    /* --- TIMER --- */
+    let isRunning = false;
+    let startTimeValue = null;
+
+    function toggleTimer() {
+        const btn = document.getElementById('timerBtn');
+        const startInput = document.getElementById('startTime');
+        const endInput = document.getElementById('endTime');
+        const durationInput = document.getElementById('duration');
+        const now = new Date();
+        const timeStr = now.toTimeString().substring(0, 5);
+
+        if (!isRunning) {
+            isRunning = true;
+            startTimeValue = now;
+            btn.innerHTML = "<span>⏹ Stop Task</span>";
+            btn.classList.add('running');
+            startInput.value = timeStr;
+            endInput.value = "";
+            durationInput.value = "";
+        } else {
+            isRunning = false;
+            btn.innerHTML = "<span>▶ Start Task</span>";
+            btn.classList.remove('running');
+            endInput.value = timeStr;
+            const diff = Math.round((now - startTimeValue) / 60000);
+            durationInput.value = diff < 1 ? 1 : diff;
+        }
+    }
+
+    /* --- ADD ENTRY --- */
+    function addEntry() {
+        const refId = document.getElementById('refId').value;
+        const start = document.getElementById('startTime').value;
+        const end = document.getElementById('endTime').value;
+        const duration = document.getElementById('duration').value;
+        const stage = document.getElementById('stage').value;
+        const sku = document.getElementById('sku').value;
+        const qty = document.getElementById('qty').value;
+        const problem = document.getElementById('problem').value;
+        const note = document.getElementById('note').value;
+
+        if (!start || !sku) { showToast("Start Timer & Scan SKU first!", "error"); return; }
+
+        const table = document.getElementById('logTable').getElementsByTagName('tbody')[0];
+        const newRow = table.insertRow(0); 
+
+        newRow.innerHTML = `
+            <td style="font-weight:bold; color:var(--text-sub)">${refId}</td>
+            <td style="white-space:nowrap">${start}-${end}</td>
+            <td>${duration}</td>
+            <td>${stage}</td>
+            <td>${sku}</td>
+            <td>${qty}</td>
+            <td style="color:red">${problem}</td>
+            <td>${note}</td>
+        `;
+
+        showToast("Saved!", "success");
+        document.getElementById('sku').value = '';
+        document.getElementById('qty').value = '';
+        document.getElementById('problem').value = '';
+        document.getElementById('note').value = '';
+    }
+
+    /* --- CSV --- */
+    function downloadCSV() {
+        const rows = document.querySelectorAll("table tr");
+        if(rows.length <= 1) return showToast("No data", "error");
+        
+        let csv = "\uFEFFRef ID,Time,Duration,Stage,SKU,Qty,Problem,Note\r\n";
+        for (let i = 1; i < rows.length; i++) {
+            const cols = rows[i].querySelectorAll("td");
+            let data = [];
+            cols.forEach(c => data.push(`"${c.innerText.replace(/"/g, '""')}"`));
+            csv += data.join(",") + "\r\n";
+        }
+        
+        const link = document.createElement("a");
+        link.href = encodeURI("data:text/csv;charset=utf-8," + csv);
+        link.download = `WMS_${currentMode}_${new Date().toISOString().slice(0,10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function clearTable() {
+        if(confirm("Delete all?")) {
+            document.querySelector("tbody").innerHTML = "";
+            showToast("Cleared", "success");
+        }
+    }
+
+    function showToast(msg, type) {
+        const container = document.getElementById('toast-container');
+        const t = document.createElement('div');
+        t.className = 'toast';
+        t.style.borderLeftColor = type === 'success' ? '#10b981' : '#ef4444';
+        t.innerHTML = `<strong>${type === 'success' ? 'OK' : '!'}</strong> ${msg}`;
+        container.appendChild(t);
+        setTimeout(() => t.classList.add('show'), 10);
+        setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 2500);
+    }
+</script>
+
+</body>
+</html>
