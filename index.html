@@ -4,15 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WMS Smart Tracker</title>
-    <link rel="shortcut icon" href="WMS.png" type="image/x-icon">   
+    <link rel="shortcut icon" href="WMS.png" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
     <style>
+        /* 1. Global Reset for Size Equality */
+        * {
+            box-sizing: border-box; /* This ensures padding doesn't make boxes uneven */
+        }
+
         :root {
-            --primary: #4f46e5; /* Indigo */
-            --inbound: #059669; /* Emerald */
+            --primary: #4f46e5; 
+            --inbound: #059669; 
             --bg: #f1f5f9;
             --surface: #ffffff;
             --border: #cbd5e1;
@@ -26,7 +31,7 @@
             background-color: var(--bg);
             color: var(--text-main);
             margin: 0;
-            padding: 20px;
+            padding: 15px; /* Reduced padding for mobile */
             overflow-x: hidden; 
         }
 
@@ -34,45 +39,41 @@
             max-width: 1000px;
             margin: 0 auto;
             background: var(--surface);
-            padding: 25px;
+            padding: 20px;
             border-radius: 16px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             border-top: 6px solid var(--primary);
             transition: border-color 0.3s;
         }
 
-        /* --- HEADER & LOGO (UPDATED FOR IMG) --- */
+        /* --- HEADER --- */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             padding-bottom: 15px;
             border-bottom: 1px solid var(--border);
         }
 
-        .logo-container {
-            display: flex;
-            align-items: center;
-        }
-
-        /* Styles for the new Image Tag */
+        .logo-container { display: flex; align-items: center; }
+        
+        /* Image Style */
         .wms-logo-img {
-            height: 50px; /* Adjust height as needed for PC */
-            width: auto;  /* Maintains aspect ratio */
+            height: 45px; 
+            width: auto; 
             display: block;
         }
 
         #currentDate { font-size: 0.9rem; color: var(--text-sub); font-weight: 600; }
 
-
         /* --- MODE SWITCHER --- */
         .mode-switcher {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            gap: 10px;
             background: #e2e8f0;
-            padding: 4px;
+            padding: 5px;
             border-radius: 10px;
             margin-bottom: 20px;
         }
@@ -82,7 +83,7 @@
             border: none;
             border-radius: 8px;
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: var(--text-sub);
             background: transparent;
             cursor: pointer;
@@ -123,15 +124,15 @@
         }
         .container.inbound-mode .timer-btn { background: var(--inbound); }
         .timer-btn.running { background-color: var(--danger) !important; animation: pulse 1.5s infinite; }
-        
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
 
         .timer-info { flex-grow: 1; }
         .clock-display { font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
 
-        /* --- INPUTS --- */
+        /* --- INPUT GRID (The Fix) --- */
         .input-grid {
             display: grid;
+            /* PC: Adaptive columns */
             grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 15px;
             margin-bottom: 20px;
@@ -141,25 +142,18 @@
         label { font-size: 0.75rem; font-weight: 700; color: var(--text-sub); margin-bottom: 6px; }
         
         input, select {
+            width: 100%; /* Ensure full width */
             padding: 12px;
             border: 1px solid var(--border);
             border-radius: 8px;
-            font-size: 1rem; 
+            font-size: 16px; /* Prevents iPhone Zoom */
             background: white;
+            height: 48px; /* Fixed height so all boxes match */
         }
         input:focus, select:focus { outline: 2px solid var(--primary); border-color: transparent; }
 
-        /* Highlight for Ref ID */
-        #refId {
-            background-color: #eff6ff;
-            color: var(--primary);
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-        .container.inbound-mode #refId {
-            background-color: #ecfdf5;
-            color: var(--inbound);
-        }
+        #refId { background-color: #eff6ff; color: var(--primary); font-weight: 700; }
+        .container.inbound-mode #refId { background-color: #ecfdf5; color: var(--inbound); }
 
         /* --- ACTIONS --- */
         .btn-group { display: flex; gap: 10px; margin-bottom: 25px; }
@@ -175,7 +169,7 @@
             justify-content: center;
             gap: 8px;
             font-size: 0.95rem;
-            transition: all 0.2s;
+            height: 50px; /* Fixed height for buttons */
         }
         
         .btn-add { background-color: var(--text-main); color: white; flex-grow: 2; }
@@ -183,7 +177,6 @@
         .container.outbound-mode .btn-add { background-color: var(--primary); }
         .btn-download { background-color: #334155; color: white; flex-grow: 1; }
         .btn-clear { background-color: white; color: var(--danger); border: 1px solid #fee2e2; }
-        button.action-btn:active { transform: scale(0.98); }
 
         /* --- TABLE --- */
         .table-wrapper {
@@ -196,23 +189,28 @@
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
         th { background: #f8fafc; color: var(--text-sub); font-weight: 600; white-space: nowrap; }
 
-        /* --- MOBILE RESPONSIVE --- */
+        /* --- MOBILE FORCE EQUAL SIZE --- */
         @media (max-width: 768px) {
-            body { padding: 10px; }
-            .container { padding: 15px; border-radius: 12px; }
-            
-            /* Header adjustments for mobile */
-            header { align-items: center; }
-            .wms-logo-img { height: 40px; } /* Smaller logo on phone */
-            #currentDate { font-size: 0.75rem; }
+            /* Header */
+            header { flex-direction: row; gap: 10px; }
+            .wms-logo-img { height: 35px; } 
+            #currentDate { font-size: 0.75rem; text-align: right; }
 
+            /* Timer */
             .timer-section { padding: 12px; }
-            .timer-btn { width: 100%; height: 50px; font-size: 1.1rem; }
-            .timer-info { width: 100%; display: flex; justify-content: space-between; margin-top: 5px; }
-            .input-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-            .full-mobile { grid-column: 1 / -1; }
+            .timer-btn { width: 100%; }
+            .timer-info { width: 100%; display: flex; justify-content: space-between; margin-top: 10px; }
+
+            /* INPUTS: FORCE 1 COLUMN so they are all Equal Width */
+            .input-grid {
+                display: flex;
+                flex-direction: column; /* Stacks everything vertically */
+                gap: 12px;
+            }
+
+            /* Buttons */
             .btn-group { flex-direction: column; }
-            .action-btn { width: 100%; height: 48px; }
+            .action-btn { width: 100%; }
         }
 
         #toast-container { position: fixed; bottom: 20px; left: 20px; right: 20px; z-index: 1000; pointer-events: none; }
@@ -253,7 +251,7 @@
     </div>
     
     <div class="input-grid">
-        <div class="form-group full-mobile">
+        <div class="form-group">
             <label>Ref ID (SO/ASN)</label>
             <input type="text" id="refId" placeholder="SO..." onchange="manualIdChange()">
         </div>
@@ -276,7 +274,7 @@
             <select id="stage"></select>
         </div>
 
-        <div class="form-group full-mobile">
+        <div class="form-group">
             <label>SKU / Barcode</label>
             <input type="text" id="sku" placeholder="Scan here...">
         </div>
@@ -284,11 +282,11 @@
             <label>Qty</label>
             <input type="number" id="qty" placeholder="0" inputmode="numeric">
         </div>
-        <div class="form-group full-mobile">
+        <div class="form-group">
             <label>Problem</label>
             <input type="text" id="problem" placeholder="Issues?">
         </div>
-        <div class="form-group full-mobile">
+        <div class="form-group">
             <label>Note</label>
             <input type="text" id="note" placeholder="Additional details...">
         </div>
@@ -322,7 +320,6 @@
 <div id="toast-container"></div>
 
 <script>
-    /* --- CONFIG --- */
     let currentMode = 'Outbound';
     let isManualId = false; 
 
@@ -331,7 +328,6 @@
         Outbound: ["Picking", "Inspect", "Move to Dock", "Hand Over"]
     };
 
-    /* --- INIT --- */
     const dateOptions = { weekday: 'short', month: 'short', day: 'numeric' };
     document.getElementById('currentDate').innerText = new Date().toLocaleDateString('en-US', dateOptions);
     setInterval(() => document.getElementById('liveClock').innerText = new Date().toLocaleTimeString('en-GB'), 1000);
@@ -339,36 +335,28 @@
     updateStageDropdown();
     generateAutoID();
 
-    /* --- ID GENERATOR LOGIC --- */
     function generateAutoID() {
         if(isManualId) return;
-
         const now = new Date();
         const yy = now.getFullYear().toString().slice(-2);
         const mm = String(now.getMonth() + 1).padStart(2, '0');
         const dd = String(now.getDate()).padStart(2, '0');
-        
         const dateCode = `${yy}${mm}${dd}`;
         const prefix = currentMode === 'Outbound' ? 'SO' : 'ASN';
         const suffix = '001';
-
         document.getElementById('refId').value = `${prefix}${dateCode}${suffix}`;
     }
 
     function manualIdChange() { isManualId = true; }
 
-    /* --- MODE SWITCHING --- */
     function setMode(mode) {
         currentMode = mode;
         isManualId = false;
-        
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
         document.querySelector(`.mode-btn[data-mode="${mode}"]`).classList.add('active');
-        
         const container = document.getElementById('mainContainer');
         container.className = `container ${mode.toLowerCase()}-mode`;
         container.style.borderTopColor = mode === 'Inbound' ? 'var(--inbound)' : 'var(--primary)';
-        
         updateStageDropdown();
         generateAutoID();
     }
@@ -382,7 +370,6 @@
         });
     }
 
-    /* --- TIMER --- */
     let isRunning = false;
     let startTimeValue = null;
 
@@ -412,7 +399,6 @@
         }
     }
 
-    /* --- ADD ENTRY --- */
     function addEntry() {
         const refId = document.getElementById('refId').value;
         const start = document.getElementById('startTime').value;
@@ -447,11 +433,9 @@
         document.getElementById('note').value = '';
     }
 
-    /* --- CSV --- */
     function downloadCSV() {
         const rows = document.querySelectorAll("table tr");
         if(rows.length <= 1) return showToast("No data", "error");
-        
         let csv = "\uFEFFRef ID,Time,Duration,Stage,SKU,Qty,Problem,Note\r\n";
         for (let i = 1; i < rows.length; i++) {
             const cols = rows[i].querySelectorAll("td");
@@ -459,7 +443,6 @@
             cols.forEach(c => data.push(`"${c.innerText.replace(/"/g, '""')}"`));
             csv += data.join(",") + "\r\n";
         }
-        
         const link = document.createElement("a");
         link.href = encodeURI("data:text/csv;charset=utf-8," + csv);
         link.download = `WMS_${currentMode}_${new Date().toISOString().slice(0,10)}.csv`;
