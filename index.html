@@ -9,11 +9,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+
     <style>
-        /* 1. Global Reset for Size Equality */
-        * {
-            box-sizing: border-box; /* This ensures padding doesn't make boxes uneven */
-        }
+        * { box-sizing: border-box; }
 
         :root {
             --primary: #4f46e5; 
@@ -24,6 +24,7 @@
             --text-main: #1e293b;
             --text-sub: #64748b;
             --danger: #ef4444;
+            --pdf-color: #dc2626;
         }
 
         body {
@@ -31,7 +32,7 @@
             background-color: var(--bg);
             color: var(--text-main);
             margin: 0;
-            padding: 15px; /* Reduced padding for mobile */
+            padding: 15px;
             overflow-x: hidden; 
         }
 
@@ -56,16 +57,14 @@
             border-bottom: 1px solid var(--border);
         }
 
-        .logo-container { display: flex; align-items: center; }
+        .logo-container { display: flex; align-items: center; gap: 10px; }
         
-        /* Image Style */
-        .wms-logo-img {
-            height: 45px; 
-            width: auto; 
-            display: block;
-        }
-
-        #currentDate { font-size: 0.9rem; color: var(--text-sub); font-weight: 600; }
+        /* Note: If WMS.png is not on the phone, this icon might break. 
+           I added a fallback size just in case. */
+        .wms-logo-img { height: 45px; width: auto; display: block; }
+        
+        h3 { margin: 0; font-size: 1.2rem; color: var(--text-main); }
+        #currentDate { font-size: 0.8rem; color: var(--text-sub); font-weight: 600; text-align: right;}
 
         /* --- MODE SWITCHER --- */
         .mode-switcher {
@@ -129,10 +128,9 @@
         .timer-info { flex-grow: 1; }
         .clock-display { font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
 
-        /* --- INPUT GRID (The Fix) --- */
+        /* --- INPUT GRID (Mobile Optimized) --- */
         .input-grid {
             display: grid;
-            /* PC: Adaptive columns */
             grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 15px;
             margin-bottom: 20px;
@@ -142,21 +140,20 @@
         label { font-size: 0.75rem; font-weight: 700; color: var(--text-sub); margin-bottom: 6px; }
         
         input, select {
-            width: 100%; /* Ensure full width */
+            width: 100%;
             padding: 12px;
             border: 1px solid var(--border);
             border-radius: 8px;
-            font-size: 16px; /* Prevents iPhone Zoom */
+            font-size: 16px; /* Prevents zoom on iPhone */
             background: white;
-            height: 48px; /* Fixed height so all boxes match */
+            height: 48px;
         }
         input:focus, select:focus { outline: 2px solid var(--primary); border-color: transparent; }
-
         #refId { background-color: #eff6ff; color: var(--primary); font-weight: 700; }
         .container.inbound-mode #refId { background-color: #ecfdf5; color: var(--inbound); }
 
         /* --- ACTIONS --- */
-        .btn-group { display: flex; gap: 10px; margin-bottom: 25px; }
+        .btn-group { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
         
         button.action-btn {
             padding: 12px 20px;
@@ -169,14 +166,17 @@
             justify-content: center;
             gap: 8px;
             font-size: 0.95rem;
-            height: 50px; /* Fixed height for buttons */
+            height: 50px;
+            flex-grow: 1; 
         }
         
-        .btn-add { background-color: var(--text-main); color: white; flex-grow: 2; }
+        .btn-add { background-color: var(--text-main); color: white; flex-basis: 100%; } 
         .container.inbound-mode .btn-add { background-color: var(--inbound); }
         .container.outbound-mode .btn-add { background-color: var(--primary); }
-        .btn-download { background-color: #334155; color: white; flex-grow: 1; }
-        .btn-clear { background-color: white; color: var(--danger); border: 1px solid #fee2e2; }
+        
+        .btn-excel { background-color: #059669; color: white; }
+        .btn-pdf { background-color: var(--pdf-color); color: white; }
+        .btn-clear { background-color: white; color: var(--danger); border: 1px solid #fee2e2; max-width: 60px; }
 
         /* --- TABLE --- */
         .table-wrapper {
@@ -189,28 +189,25 @@
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
         th { background: #f8fafc; color: var(--text-sub); font-weight: 600; white-space: nowrap; }
 
-        /* --- MOBILE FORCE EQUAL SIZE --- */
+        /* --- MOBILE LAYOUT FIXES --- */
         @media (max-width: 768px) {
-            /* Header */
             header { flex-direction: row; gap: 10px; }
+            h3 { font-size: 1rem; }
             .wms-logo-img { height: 35px; } 
             #currentDate { font-size: 0.75rem; text-align: right; }
 
-            /* Timer */
             .timer-section { padding: 12px; }
             .timer-btn { width: 100%; }
             .timer-info { width: 100%; display: flex; justify-content: space-between; margin-top: 10px; }
 
-            /* INPUTS: FORCE 1 COLUMN so they are all Equal Width */
-            .input-grid {
-                display: flex;
-                flex-direction: column; /* Stacks everything vertically */
-                gap: 12px;
-            }
+            /* Force 1 column on mobile inputs for equal size */
+            .input-grid { display: flex; flex-direction: column; gap: 12px; }
 
-            /* Buttons */
-            .btn-group { flex-direction: column; }
-            .action-btn { width: 100%; }
+            .btn-group { flex-direction: row; }
+            .btn-add { flex-basis: 100%; width: 100%; order: 1; }
+            .btn-excel { flex-basis: 40%; order: 2; }
+            .btn-pdf { flex-basis: 40%; order: 3; }
+            .btn-clear { flex-basis: 20%; order: 4; }
         }
 
         #toast-container { position: fixed; bottom: 20px; left: 20px; right: 20px; z-index: 1000; pointer-events: none; }
@@ -230,7 +227,8 @@
 <div class="container outbound-mode" id="mainContainer">
     <header>
         <div class="logo-container">
-            <img src="WMS.png" alt="WMS Logo" class="wms-logo-img"> <h2>WMS Smart Tracker</h2>
+            <img src="WMS.png" alt="WMS Logo" class="wms-logo-img" onerror="this.style.display='none'">
+            <h3>WMS Tracker</h3>
         </div>
         <div id="currentDate">Loading...</div>
     </header>
@@ -294,7 +292,8 @@
 
     <div class="btn-group">
         <button class="action-btn btn-add" onclick="addEntry()"><span>+</span> Save Entry</button>
-        <button class="action-btn btn-download" onclick="downloadCSV()"><span>↓</span> CSV</button>
+        <button class="action-btn btn-excel" onclick="downloadCSV()"><span>📗</span> Excel / CSV</button>
+        <button class="action-btn btn-pdf" onclick="downloadPDF()"><span>📕</span> PDF</button>
         <button class="action-btn btn-clear" onclick="clearTable()"><span>🗑</span></button>
     </div>
 
@@ -324,11 +323,11 @@
     let isManualId = false; 
 
     const stages = {
-        Inbound: ["Receiving", "Inspect", "Put Away"],
-        Outbound: ["Picking", "Inspect", "Move to Dock", "Hand Over"]
+        Inbound: ["Replenishment", "Receiving", "Inspect", "Put Away"],
+        Outbound: ["Replenishment", "Inspect", "Move to Dock", "Hand Over"]
     };
 
-    const dateOptions = { weekday: 'short', month: 'short', day: 'numeric' };
+    const dateOptions = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
     document.getElementById('currentDate').innerText = new Date().toLocaleDateString('en-US', dateOptions);
     setInterval(() => document.getElementById('liveClock').innerText = new Date().toLocaleTimeString('en-GB'), 1000);
     
@@ -433,9 +432,11 @@
         document.getElementById('note').value = '';
     }
 
+    // --- FIX 1: MOBILE COMPATIBLE CSV DOWNLOAD ---
     function downloadCSV() {
         const rows = document.querySelectorAll("table tr");
         if(rows.length <= 1) return showToast("No data", "error");
+        
         let csv = "\uFEFFRef ID,Time,Duration,Stage,SKU,Qty,Problem,Note\r\n";
         for (let i = 1; i < rows.length; i++) {
             const cols = rows[i].querySelectorAll("td");
@@ -443,12 +444,47 @@
             cols.forEach(c => data.push(`"${c.innerText.replace(/"/g, '""')}"`));
             csv += data.join(",") + "\r\n";
         }
+        
+        // Use BLOB for Mobile Compatibility
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        link.href = encodeURI("data:text/csv;charset=utf-8," + csv);
-        link.download = `WMS_${currentMode}_${new Date().toISOString().slice(0,10)}.csv`;
+        link.href = url;
+        link.setAttribute("download", `WMS_${currentMode}_${new Date().toISOString().slice(0,10)}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    }
+
+    // --- FIX 2: MOBILE COMPATIBLE PDF DOWNLOAD ---
+    function downloadPDF() {
+        // Check if library is loaded
+        if (!window.jspdf) {
+            showToast("PDF Library not loaded. Check internet.", "error");
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const rows = document.querySelectorAll("table tr");
+        if(rows.length <= 1) return showToast("No data", "error");
+
+        const doc = new jsPDF();
+        const today = new Date().toLocaleDateString();
+        doc.setFontSize(18);
+        doc.text(`WMS ${currentMode} Report`, 14, 20);
+        doc.setFontSize(10);
+        doc.text(`Date: ${today}`, 14, 28);
+
+        doc.autoTable({
+            html: '#logTable',
+            startY: 35,
+            theme: 'grid',
+            headStyles: { fillColor: currentMode === 'Inbound' ? [5, 150, 105] : [79, 70, 229] },
+            styles: { fontSize: 8 }
+        });
+
+        doc.save(`WMS_Report_${currentMode}_${today}.pdf`);
+        showToast("PDF Downloaded", "success");
     }
 
     function clearTable() {
